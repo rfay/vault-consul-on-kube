@@ -20,8 +20,8 @@ spec:
             - "-data-dir=/var/lib/consul"
             - "-server"
             - "-bootstrap-expect=3"
-            - "-bind=0.0.0.0"
-            - "-advertise=10.215.243.61"
+            #- "-bind=0.0.0.0"
+            - "-advertise=10.7.240.101"
             - "-client=0.0.0.0"
           volumeMounts:
             - mountPath: /var/lib/consul
@@ -45,6 +45,16 @@ spec:
               name: consuldns
             - containerPort: 8300
               name: server
+          readinessProbe:
+            exec:
+              # Check to see if /var/lib/consul got mounted
+              command:
+              - grep
+              - /var/lib/consul
+              - /proc/mounts
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+
       volumes:
         - name: data
           gcePersistentDisk:
