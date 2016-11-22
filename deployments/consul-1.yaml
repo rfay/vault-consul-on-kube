@@ -14,7 +14,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: consul
-          image: "consul:v0.6.4"
+          image: "consul:0.7.1"
           args:
             - "agent"
             - "-data-dir=/var/lib/consul"
