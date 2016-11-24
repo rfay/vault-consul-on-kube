@@ -1,0 +1,54 @@
+# Deployment for vault instances
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: vault
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: vault
+          image: "randyfay/vault:0.0.7"
+          ports:
+          - containerPort: 8200
+            name: main-port
+          - containerPort: 8201
+            name: local-talk-port
+
+          env:
+          - name: VAULT_LOCAL_CONFIG
+            value:
+                backend "consul" {
+                  address = "$(CONSUL_HTTP_SERVICE_HOST):$(CONSUL_HTTP_SERVICE_PORT)"
+                }
+                listener "tcp" { address = "0.0.0.0:8200"
+                  tls_disable = 1
+                }
+                disable_mlock = true
+          - name: VAULT_REDIRECT_ADDR
+            value: http://$(VAULT_LB_SERVICE_HOST):$(VAULT_LB_SERVICE_PORT)
+          # VAULT_ADDR is provided only for convenience - so don't have to set when logging in.
+          - name: VAULT_ADDR
+            value: http://localhost:8200
+---
+# Front-end load-balancer service for vault instances
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-lb
+  labels:
+    app: vault
+spec:
+  ports:
+    - name: vaultport
+      port: 8200
+      targetPort: 8200
+  selector:
+    app: vault
+  type: LoadBalancer
