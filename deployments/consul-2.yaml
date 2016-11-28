@@ -22,9 +22,9 @@ spec:
             - "-server"
             - "-bootstrap-expect=3"
             #- "-bind=0.0.0.0"
-            - "-advertise=10.7.240.102"
+            - "-advertise=$(CONSUL_2_SERVICE_HOST)"
             - "-client=0.0.0.0"
-            - "-retry-join=10.7.240.101"
+            - "-retry-join=$(CONSUL_1_SERVICE_HOST)"
           volumeMounts:
             - mountPath: /var/lib/consul
               name: data
