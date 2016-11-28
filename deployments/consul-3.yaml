@@ -24,6 +24,7 @@ spec:
             #- "-bind=0.0.0.0"
             - "-advertise=$(CONSUL_3_SERVICE_HOST)"
             - "-client=0.0.0.0"
+            - "-rejoin"
             - "-retry-join=$(CONSUL_1_SERVICE_HOST)"
           volumeMounts:
             - mountPath: /var/lib/consul

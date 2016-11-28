@@ -5,7 +5,7 @@ metadata:
   labels:
     name: consul-2
 spec:
-  clusterIP: 10.7.240.102
+#  clusterIP: 10.7.240.102
   ports:
     - name: http
       port: 8500

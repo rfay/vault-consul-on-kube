@@ -5,7 +5,7 @@ metadata:
   labels:
     name: consul-3
 spec:
-  clusterIP: 10.7.240.103
+#  clusterIP: 10.7.240.103
   ports:
     - name: http
       port: 8500

@@ -23,6 +23,7 @@ spec:
             - "-bootstrap-expect=3"
             #- "-bind=0.0.0.0"
             - "-advertise=$(CONSUL_1_SERVICE_HOST)"
+            - "-rejoin"
             - "-client=0.0.0.0"
           volumeMounts:
             - mountPath: /var/lib/consul
