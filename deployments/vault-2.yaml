@@ -1,0 +1,41 @@
+# Deployment for vault instance 2
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: vault-2
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vault
+        instance: vault-2
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: vault
+          image: "randyfay/vault:0.0.8"
+          ports:
+          - containerPort: 8200
+            name: main-port
+          - containerPort: 8201
+            name: local-talk-port
+
+          env:
+          - name: VAULT_LOCAL_CONFIG
+            value:
+                backend "consul" {
+                  address = "$(CONSUL_HTTP_SERVICE_HOST):$(CONSUL_HTTP_SERVICE_PORT)"
+                }
+                listener "tcp" {
+                  address = "0.0.0.0:8200"
+                  tls_disable = 1
+                }
+                disable_mlock = true
+#          - name: VAULT_REDIRECT_ADDR
+#            value: https://$(VAULT_2_SERVICE_HOST):$(VAULT_2_SERVICE_PORT)
+          # VAULT_ADDR is provided only for convenience - so don't have to set when logging in.
+          - name: VAULT_ADDR
+            value: http://localhost:8200
+---

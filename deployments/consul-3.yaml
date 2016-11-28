@@ -18,6 +18,7 @@ spec:
           args:
             - "agent"
             - "-ui"
+            - "-node=consul-3"
             - "-data-dir=/var/lib/consul"
             - "-server"
             - "-bootstrap-expect=3"

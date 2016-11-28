@@ -12,4 +12,6 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
+EXPOSE 8201
+
 CMD ["vault", "server", "-config", "/vault/config"]
