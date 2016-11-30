@@ -30,24 +30,30 @@ spec:
             - mountPath: /var/lib/consul
               name: data
           ports:
-            - containerPort: 8500
-              name: ui-port
-            - containerPort: 8400
-              name: alt-port
-            - containerPort: 53
-              name: udp-port
-            - containerPort: 443
-              name: https-port
-            - containerPort: 8080
-              name: http-port
-            - containerPort: 8301
-              name: serflan
-            - containerPort: 8302
-              name: serfwan
-            - containerPort: 8600
-              name: consuldns
             - containerPort: 8300
               name: server
+            - containerPort: 8301
+              name: serflan-tcp
+              protocol: "TCP"
+            - containerPort: 8301
+              name: serflan-udp
+              protocol: "UDP"
+            - containerPort: 8302
+              name: serfwan-tcp
+              protocol: "TCP"
+            - containerPort: 8302
+              name: serfwan-udp
+              protocol: "UDP"
+            - containerPort: 8400
+              name: rpc-port
+            - containerPort: 8500
+              name: api-port
+            - containerPort: 8600
+              name: consuldns-tcp
+              protocol: "TCP"
+            - containerPort: 8600
+              name: consuldns-udp
+              protocol: "UDP"
           readinessProbe:
             exec:
               # Check to see if /var/lib/consul got mounted
