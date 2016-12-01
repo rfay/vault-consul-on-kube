@@ -30,12 +30,13 @@ spec:
           - name: VAULT_LOCAL_CONFIG
             # Disable registration as we don't even use consul's service discovery features
             # Port 9000 listener is for local and status checks
+            # See https://github.com/hashicorp/vault/issues/1559 for why true is quoted in disable_registration
             value:
                 backend "consul" {
                   address = "$(CONSUL_HTTP_SERVICE_HOST):$(CONSUL_HTTP_SERVICE_PORT)"
                   cluster_addr = "https://$(VAULT_1_SERVICE_HOST):$(VAULT_1_SERVICE_PORT_BACKENDPORT)"
                   token = "$VAULT_CONSUL_KEY"
-                  disable_registration = 1
+                  disable_registration = "true"
                 }
                 listener "tcp" {
                   address = "0.0.0.0:8200"
