@@ -22,6 +22,11 @@ spec:
           - containerPort: 8201
             name: local-talk-port
           env:
+          - name: VAULT_CONSUL_KEY
+            valueFrom:
+              secretKeyRef:
+                name: vault-consul-key
+                key: consul-key
           - name: VAULT_LOCAL_CONFIG
             # Disable registration as we don't even use consul's service discovery features
             # Port 9000 listener is for local and status checks
@@ -29,6 +34,7 @@ spec:
                 backend "consul" {
                   address = "$(CONSUL_HTTP_SERVICE_HOST):$(CONSUL_HTTP_SERVICE_PORT)"
                   cluster_addr = "https://$(VAULT_1_SERVICE_HOST):$(VAULT_1_SERVICE_PORT_BACKENDPORT)"
+                  token = "$VAULT_CONSUL_KEY"
                   disable_registration = 1
                 }
                 listener "tcp" {
