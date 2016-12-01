@@ -27,7 +27,7 @@ spec:
             - "-client=0.0.0.0"
             - "-rejoin"
             - "-retry-join=$(CONSUL_1_SERVICE_HOST)"
-            - "-config-file=/consul/config/encryptkey/consul-gossip-key.txt"
+            - "-config-dir=/etc/consul"
           ports:
             - containerPort: 8300
               name: server
@@ -65,15 +65,15 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/consul
               name: data
-            - name: "consulkey"
-              mountPath: /consul/config/encryptkey
+            - name: "consulconfig"
+              mountPath: /etc/consul
 
       volumes:
         - name: data
           gcePersistentDisk:
             pdName: consul-3
             fsType: ext4
-        - name: "consulkey"
+        - name: "consulconfig"
           "secret": {
-            "secretName": "consul-gossip-key"
+            "secretName": "consul-config"
           }
