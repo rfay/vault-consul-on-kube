@@ -1,17 +1,16 @@
-# Running Consul on Kubernetes
+# Running Consul+Vault on Kubernetes
 
-These are my rough notes on how to run a 3 node consul cluster on Kubernetes. You MUST understand how consul works, this is just my notes.
+This process will bring up a 3-member consul cluster and a two vault
+servers running in an HA configuration
 
 ## Overview
 
-- This guide is only showing the high level steps to provision a basic cluster
-- The cluster will be insecure. Use the consul docs to help you secure the cluster
-- This is NOT production ready. Do not run consul like this in production. These are just notes on the basics.
+
 
 ## What makes this work
 
-- 1 deployment per consul member
-- 1 service per consul member
+- Services for each consul member and vault member
+- Deployments for each (because they require some minor separate configuration)
 - 1 service to expose the consul UI
 - Use `spec.securityContext.fsGroup` to ensure the volume is writable by the consul process which is running as non-root.
 
@@ -26,11 +25,11 @@ spec:
 Clone this repo:
 
 ```
-git clone https://github.com/kelseyhightower/consul-on-kubernetes.git
+git clone https://github.com/drud/vault-consul-on-kube.git
 ```
 
 ```
-cd consul-on-kubernetes
+cd vault-consul-on-kube
 ```
 
 ### Create Volumes
@@ -89,6 +88,7 @@ consul-2-3080431481-7mf6r   1/1       Running   0          1m
 consul-3-3678840700-3bp3k   1/1       Running   0          1m
 ```
 
+
 ### Verification
 
 ```
@@ -126,3 +126,7 @@ kubectl logs consul-1-3104874582-6o4n4
     2016/08/05 19:49:17 [INFO] consul: New leader elected: consul-3-3678840700-3bp3k
     2016/08/05 19:49:19 [INFO] agent: Synced service 'consul'
 ```
+
+### Vault Services
+
+### Vault Deployment
