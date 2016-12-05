@@ -1,17 +1,26 @@
 # Running Consul+Vault on Kubernetes
 
 This process will bring up a 3-member consul cluster and a two vault
-servers running in an HA configuration
+servers running in an HA configuration.
+
+Consul starter was from [Kelsey Hightower's Consul-on-Kubernetes](https://github.com/kelseyhightower/consul-on-kubernetes) 
+Thanks!
 
 ## Overview
 
+A cluster of three [consul](https://github.com/hashicorp/consul) servers
+provides an HA back-end for two [vault](https://github.com/hashicorp/vault)
+servers. 
 
+Consul is not exposed outside the cluster. Vault is exposed on a 
+load-balancer service via https.
 
 ## What makes this work
 
 - Services for each consul member and vault member
 - Deployments for each (because they require some minor separate configuration)
 - 1 service to expose the consul UI
+- 1 load-balancer service to expose the vault servers to outside world
 - Use `spec.securityContext.fsGroup` to ensure the volume is writable by the consul process which is running as non-root.
 
 ```
@@ -20,49 +29,29 @@ spec:
     fsGroup: 1000
 ```
 
-## Usage
+### Usage
 
-Clone this repo:
-
-```
-git clone https://github.com/drud/vault-consul-on-kube.git
-```
-
-```
-cd vault-consul-on-kube
-```
+* Clone this repo.
+* Create services `kubectl apply -f services`
 
 ### Create Volumes
 
 ```
-gcloud compute disks create consul-1 consul-2 consul-3
+gcloud compute disks create --size=50GB consul-1 consul-2 consul-3
 ```
 
-### Consul Services
+### Create consul-config secret for consul configuration
 
-Create one service per consul member with a fixed cluster IP. 
+Update the files in example_config to meet your needs
 
-```
-kubectl create -f services/
-```
+`uuidgen` will create a new consul acl_master_token for you, which 
+you can plug into the master.json.
 
-```
-service "consul-1" created
-service "consul-2" created
-service "consul-3" created
-service "consul-http" created
-```
+Use `consul keygen` or another technique to generate the encryption
+key for encrypt.json.
 
 ```
-kubectl get svc
-```
-```
-NAME          CLUSTER-IP       EXTERNAL-IP     PORT(S)                                                                   AGE
-consul-1      10.215.243.61    <none>          8500/TCP,8400/TCP,8301/TCP,8301/UDP,8302/TCP,8302/UDP,8300/TCP,8600/TCP   5m
-consul-2      10.215.243.62    <none>          8500/TCP,8400/TCP,8301/TCP,8301/UDP,8302/TCP,8302/UDP,8300/TCP,8600/TCP   5m
-consul-3      10.215.243.63    <none>          8500/TCP,8400/TCP,8301/TCP,8301/UDP,8302/TCP,8302/UDP,8300/TCP,8600/TCP   5m
-consul-http   10.215.243.191   XXX.XXX.X.XXX   8500/TCP                                                                  29m
-kubernetes    10.215.240.1     <none>          443/TCP                                                                   13d
+kubectl create secret generic consul-config --from-file=example_config/master.json --from-file=example_config/encrypt.json
 ```
 
 ### Consul Deployment
@@ -70,12 +59,7 @@ kubernetes    10.215.240.1     <none>          443/TCP                          
 Create one deployment per consul member.
 
 ```
-kubectl create -f deployments/
-```
-```
-deployment "consul-1" created
-deployment "consul-2" created
-deployment "consul-3" created
+kubectl apply -f deployments/consul-1.yaml -f deployments/consul-2.yaml -f deployments/consul-3.yaml
 ```
 
 ```
@@ -99,34 +83,154 @@ kubectl logs consul-1-3104874582-6o4n4
 ==> Starting Consul agent...
 ==> Starting Consul agent RPC...
 ==> Consul agent running!
-         Node name: 'consul-1-3104874582-6o4n4'
-        Datacenter: 'dc1'
+           Version: 'v0.7.1'
+         Node name: 'consul-1'
+        Datacenter: 'us-west1-a'
             Server: true (bootstrap: false)
        Client Addr: 0.0.0.0 (HTTP: 8500, HTTPS: -1, DNS: 8600, RPC: 8400)
-      Cluster Addr: 10.215.243.61 (LAN: 8301, WAN: 8302)
-    Gossip encrypt: false, RPC-TLS: false, TLS-Incoming: false
+      Cluster Addr: 10.3.240.72 (LAN: 8301, WAN: 8302)
+    Gossip encrypt: true, RPC-TLS: false, TLS-Incoming: false
              Atlas: <disabled>
 
 ==> Log data will now stream in as it occurs:
 
-    2016/08/05 19:48:36 [INFO] raft: Node at 10.215.243.61:8300 [Follower] entering Follower state
-    2016/08/05 19:48:36 [INFO] serf: EventMemberJoin: consul-1-3104874582-6o4n4 10.215.243.61
-    2016/08/05 19:48:36 [INFO] serf: EventMemberJoin: consul-1-3104874582-6o4n4.dc1 10.215.243.61
-    2016/08/05 19:48:36 [INFO] consul: adding LAN server consul-1-3104874582-6o4n4 (Addr: 10.215.243.61:8300) (DC: dc1)
-    2016/08/05 19:48:36 [INFO] consul: adding WAN server consul-1-3104874582-6o4n4.dc1 (Addr: 10.215.243.61:8300) (DC: dc1)
-    2016/08/05 19:48:36 [ERR] agent: failed to sync remote state: No cluster leader
-    2016/08/05 19:48:38 [WARN] raft: EnableSingleNode disabled, and no known peers. Aborting election.
-    2016/08/05 19:48:53 [INFO] serf: EventMemberJoin: consul-3-3678840700-3bp3k 10.215.243.63
-    2016/08/05 19:48:53 [INFO] consul: adding LAN server consul-3-3678840700-3bp3k (Addr: 10.215.243.63:8300) (DC: dc1)
-    2016/08/05 19:48:56 [ERR] agent: coordinate update error: No cluster leader
-    2016/08/05 19:48:57 [ERR] agent: failed to sync remote state: No cluster leader
-    2016/08/05 19:49:16 [INFO] serf: EventMemberJoin: consul-2-3080431481-7mf6r 10.215.243.62
-    2016/08/05 19:49:16 [INFO] consul: adding LAN server consul-2-3080431481-7mf6r (Addr: 10.215.243.62:8300) (DC: dc1)
-    2016/08/05 19:49:16 [INFO] consul: Attempting bootstrap with nodes: [10.215.243.61:8300 10.215.243.63:8300 10.215.243.62:8300]
-    2016/08/05 19:49:17 [INFO] consul: New leader elected: consul-3-3678840700-3bp3k
-    2016/08/05 19:49:19 [INFO] agent: Synced service 'consul'
+    2016/12/05 20:12:44 [INFO] raft: Initial configuration (index=0): []
+    2016/12/05 20:12:44 [INFO] serf: EventMemberJoin: consul-1 10.3.240.72
+    2016/12/05 20:12:44 [INFO] serf: EventMemberJoin: consul-1.us-west1-a 10.3.240.72
+    2016/12/05 20:12:44 [INFO] raft: Node at 10.3.240.72:8300 [Follower] entering Follower state (Leader: "")
+    2016/12/05 20:12:44 [INFO] consul: Adding LAN server consul-1 (Addr: tcp/10.3.240.72:8300) (DC: us-west1-a)
+    2016/12/05 20:12:44 [INFO] consul: Adding WAN server consul-1.us-west1-a (Addr: tcp/10.3.240.72:8300) (DC: us-west1-a)
+    2016/12/05 20:12:51 [ERR] agent: failed to sync remote state: No cluster leader
+    2016/12/05 20:12:52 [WARN] raft: no known peers, aborting election
+    2016/12/05 20:13:07 [ERR] agent: coordinate update error: No cluster leader
+    2016/12/05 20:13:19 [ERR] agent: failed to sync remote state: No cluster leader
+    2016/12/05 20:13:24 [INFO] serf: EventMemberJoin: consul-3 10.3.254.140
+    2016/12/05 20:13:24 [INFO] consul: Adding LAN server consul-3 (Addr: tcp/10.3.254.140:8300) (DC: us-west1-a)
+    2016/12/05 20:13:32 [INFO] serf: EventMemberJoin: consul-2 10.3.245.79
+    2016/12/05 20:13:32 [INFO] consul: Adding LAN server consul-2 (Addr: tcp/10.3.245.79:8300) (DC: us-west1-a)
+    2016/12/05 20:13:32 [INFO] consul: Existing Raft peers reported by consul-2, disabling bootstrap mode
+    2016/12/05 20:13:33 [ERR] agent: coordinate update error: No cluster leader
+    2016/12/05 20:13:38 [WARN] raft: Failed to get previous log: 1 log not found (last: 0)
+    2016/12/05 20:13:38 [INFO] consul: New leader elected: consul-2
+    2016/12/05 20:13:40 [INFO] agent: Synced service 'consul'
 ```
 
-### Vault Services
+Log into consul-1:
+```
+kubectl exec -it consul-1-117271-uw97q /bin/sh
+```
+
+Use the token in your master.json
+```
+consul operator raft -list-peers -token=C4213989-B836-4A8F-A649-110803BCCDC3
+Node      ID                 Address            State     Voter
+consul-2  10.3.245.79:8300   10.3.245.79:8300   leader    true
+consul-1  10.3.240.72:8300   10.3.240.72:8300   follower  true
+consul-3  10.3.254.140:8300  10.3.254.140:8300  follower  true
+```
+
+### Create a key that vault will use to access consul (vault-consul-key)
+
+We'll use the consul web UI to create this, which avoids all manner of 
+quote-escaping problems.
+
+1. Port-forward port 8500 of consul-1* to local: `kubectl port-forward consul-1* 8500`
+2. Hit http://localhost:8500/ui with browser
+3. Click "ACL"
+4. Add an ACL with name vault-token, type client, rules:
+```
+key "vault/" {
+  policy = "write"
+}
+```
+5. Capture the newly created vault-token and with it (example key here):
+```
+kubectl create secret generic vault-consul-key --from-literal=consul-key=9f34ab90-965c-56c7-37e0-362da75bfad9
+```
+
+### TLS setup for exposed vault port
+
+Get key and cert files for the exposed port. You can do this any way
+that works for your deployment. Of course make sure you have the full
+concatenated cert chain. 
+
+With concatenated full cert chain in vaulttls.fullcert.pem and key in vaulttls.key :
+```
+kubectl create secret tls vaulttls --cert=vaulttls.fullcert.pem --key=vaulttls.key
+```
+
+### Provide DNS entry for the configured cert on external ip of the vault-lb service
+
+```
+kubectl get svc vault-lb
+```
 
 ### Vault Deployment
+
+```
+kubectl apply -f deployments/vault-1.yaml -f deployments/vault-2.yaml
+```
+
+### Vault Iniitialization
+
+It's easiest to access the vault in its initial setup on the pod itself,
+where HTTP port 9000 is exposed for access without https.
+
+```
+kubectl exec -it vault-1* /bin/sh
+
+vault init
+or
+vault init -recovery-shares=1 -recovery-threshold=1
+
+```
+
+This provides the key(s) and initial auth token required.
+
+Unseal with
+
+```
+vault unseal <token>
+```
+
+and auth with
+```
+vault auth <initial_root_token>
+```
+
+Then access vault-2* in the exact same way (kubectl exec -it vault-2* /bin/sh) and unseal it. 
+It will go into standby mode.
+
+### Vault usage
+
+On your local/client machine:
+
+```
+export VAULT_ADDR=https://vault.example.com:8200
+vault status
+vault auth <root_or_other_token>
+
+$ vault write /secret/test1 value=1
+Success! Data written to: secret/test1
+
+$ vault list /secret
+Keys
+----
+junk
+test1
+
+$ vault read /secret/test1
+Key             	Value
+---             	-----
+refresh_interval	768h0m0s
+value           	1
+```
+
+### Vault failover testing
+
+* Both vaults must be unsealed
+* Restart active vault pod with kubectl delete pod vault-1*
+* Vault-2* should become leader "Mode: active"
+* Unseal vault-1* - `vault status` will find it in "Mode: standby"
+* Restart/kill vault-2* or kill the process
+* Vault-1* will become active

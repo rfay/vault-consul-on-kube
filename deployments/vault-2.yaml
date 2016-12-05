@@ -64,6 +64,6 @@ spec:
       volumes:
         - name: "tls"
           "secret": {
-            "secretName": "vaulttesttls"
+            "secretName": "vaulttls"
           }
 
