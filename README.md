@@ -1,16 +1,13 @@
 # Running Consul+Vault on Kubernetes
 
-This process will bring up a 3-member consul cluster and a two vault
-servers running in an HA configuration.
+This process will bring up a 3-member consul cluster and a two vault servers running in an HA configuration.
 
 Consul starter was from [Kelsey Hightower's Consul-on-Kubernetes](https://github.com/kelseyhightower/consul-on-kubernetes) 
 Thanks!
 
 ## Overview
 
-A cluster of three [consul](https://github.com/hashicorp/consul) servers
-provides an HA back-end for two [vault](https://github.com/hashicorp/vault)
-servers. 
+A cluster of three [consul](https://github.com/hashicorp/consul) servers provides an HA back-end for two [vault](https://github.com/hashicorp/vault) servers. 
 
 Consul is not exposed outside the cluster. Vault is exposed on a 
 load-balancer service via https.
@@ -42,16 +39,16 @@ gcloud compute disks create --size=50GB consul-1 consul-2 consul-3
 
 ### Create consul-config secret for consul configuration
 
-Update the files in example_config to meet your needs
+Update example_config/consul_config.json to meet your needs:
 
 `uuidgen` will create a new consul acl_master_token for you, which 
-you can plug into the master.json.
+you can plug into the consul_config.json.
 
 Use `consul keygen` or another technique to generate the encryption
-key for encrypt.json.
+key for 'encrypt' in consul_config.json.
 
 ```
-kubectl create secret generic consul-config --from-file=example_config/master.json --from-file=example_config/encrypt.json
+kubectl create secret generic consul-config --from-file=your_config/consul_config.json
 ```
 
 ### Consul Deployment
@@ -120,7 +117,7 @@ Log into consul-1:
 kubectl exec -it consul-1-117271-uw97q /bin/sh
 ```
 
-Use the token in your master.json
+Use the acl_master_token in your consul_config.json:
 ```
 consul operator raft -list-peers -token=C4213989-B836-4A8F-A649-110803BCCDC3
 Node      ID                 Address            State     Voter
@@ -135,7 +132,8 @@ We'll use the consul web UI to create this, which avoids all manner of
 quote-escaping problems.
 
 1. Port-forward port 8500 of consul-1* to local: `kubectl port-forward consul-1* 8500`
-2. Hit http://localhost:8500/ui with browser
+2. Hit http://localhost:8500/ui with browser.
+3. Visit the settings page (gear icon) and enter your acl_master_token.
 3. Click "ACL"
 4. Add an ACL with name vault-token, type client, rules:
 ```
@@ -146,6 +144,22 @@ key "vault/" {
 5. Capture the newly created vault-token and with it (example key here):
 ```
 kubectl create secret generic vault-consul-key --from-literal=consul-key=9f34ab90-965c-56c7-37e0-362da75bfad9
+```
+
+### Set the rules for the Anonymous Token
+
+Still in the consul web ui, Hit http://localhost:8500/ui with browser
+
+In ACL->Anonymous Token put defaults for anon token, allowing service
+registration and locks:
+
+```
+key "lock/" {
+  policy = "write"
+}
+service "" {
+  policy = "write"
+}
 ```
 
 ### TLS setup for exposed vault port
@@ -174,14 +188,15 @@ kubectl apply -f deployments/vault-1.yaml -f deployments/vault-2.yaml
 ### Vault Iniitialization
 
 It's easiest to access the vault in its initial setup on the pod itself,
-where HTTP port 9000 is exposed for access without https.
+where HTTP port 9000 is exposed for access without https. You can decide
+how many keys and the recovery threshold using args to `vault init`
 
 ```
 kubectl exec -it vault-1* /bin/sh
 
 vault init
 or
-vault init -recovery-shares=1 -recovery-threshold=1
+vault init -key-shares=1 -key-threshold=1
 
 ```
 
