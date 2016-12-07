@@ -53,15 +53,6 @@ spec:
             - containerPort: 8600
               name: consuldns-udp
               protocol: "UDP"
-          readinessProbe:
-            exec:
-              # Check to see if /var/lib/consul got mounted
-              command:
-              - grep
-              - /var/lib/consul
-              - /proc/mounts
-            initialDelaySeconds: 10
-            timeoutSeconds: 1
           volumeMounts:
             - mountPath: /var/lib/consul
               name: data
