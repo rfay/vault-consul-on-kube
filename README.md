@@ -199,8 +199,10 @@ This provides the key(s) and initial auth token required.
 Unseal with
 
 ```
-vault unseal <token>
+vault unseal
 ```
+
+(You should not generally use the form `vault unseal <key>` because it probably will leave traces of the key in shell history or elsewhere.)
 
 and auth with
 ```
