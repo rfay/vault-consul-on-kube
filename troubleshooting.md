@@ -14,7 +14,7 @@ When a vault server has access to a working consul cluster, it can be unsealed a
 
 The Consul cluster is a set of 3 servers that sync the full set of information among themselves. They can continue functioning as long as they have a quorum (2 servers) but cease to function otherwise. 
 
-#### Basic useful skills and diagnostics
+#### Basic useful skills, diagnostics, resources
 
 * Familiarity with kubectl "get" and "logs"
 * `kubectl proxy` and explore the cluster using http://localhost:8001
@@ -22,6 +22,7 @@ The Consul cluster is a set of 3 servers that sync the full set of information a
 * Know how to unseal and auth on the vault servers
 * `kubectl exec -it consul-X* /bin/sh` and use the consul command-line tool.
 * Using the Google Logs/Stackdriver logs UI to filter and review container logs
+* [Consul outage recovery](https://www.consul.io/docs/guides/outage.html), [consul snapshot](https://www.consul.io/docs/commands/snapshot.html), [consul docs](https://www.consul.io/docs/index.html), [vault docs](https://www.vaultproject.io/docs/)
 
 ## Scenario: Vault is sealed on both vault servers
 
