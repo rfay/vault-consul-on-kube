@@ -16,15 +16,8 @@ load-balancer service via https.
 
 - Services for each consul member and vault member
 - Deployments for each (because they require some minor separate configuration)
-- 1 service to expose the consul UI
-- 1 load-balancer service to expose the vault servers to outside world
-- Use `spec.securityContext.fsGroup` to ensure the volume is writable by the consul process which is running as non-root.
-
-```
-spec:
-  securityContext:
-    fsGroup: 1000
-```
+- One service exposes the consul UI
+- One load-balancer service exposes the vault servers to outside world
 
 ### Usage
 
@@ -165,7 +158,7 @@ service "" {
 ### TLS setup for exposed vault port
 
 Get key and cert files for the domain vault will be exposed from. You can do this any way
-that works for your deployment, so long as you have a concatenated full certificate chain 
+that works for your deployment, including a [self-signed certificate](http://www.akadia.com/services/ssh_test_certificate.html), so long as you have a concatenated full certificate chain 
 in vaulttls.fullcert.pem and private key in vaulttls.key :
 
 ```
@@ -250,3 +243,5 @@ value           	1
 * Unseal <vault-1*> - `vault status` will find it in "Mode: standby"
 * Restart/kill <vault-2*> or kill the process
 * <vault-1*> will become active
+
+Please note that when you do a `kubectl get po -l app=vault` you will only see one of the instances "ready". This is because only one can be leader, and that's the one that the load balancer wants to talk to by default. The readinessProbe on each determines whether it is the leader.
