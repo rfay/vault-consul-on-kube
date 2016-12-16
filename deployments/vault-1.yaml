@@ -62,10 +62,29 @@ spec:
               # name must match the volume name below
               - name: "tls"
                 mountPath: /etc/tls
+              - name: log-storage
+                mountPath: /vault/logs
+        - name: sidecar-auditlog-collector
+          image: randyfay/sidecar_json_logging:0.0.1
+          resources:
+            limits:
+              cpu: 100m
+              memory: 200Mi
+          env:
+          - name: FILES_TO_COLLECT
+            value: "/mnt/log/audit.log"
+          - name: FILES_FORMAT
+            value: json
+          volumeMounts:
+            - name: log-storage
+              readOnly: true
+              mountPath: /mnt/log
       volumes:
         - name: "tls"
           "secret": {
             "secretName": "vaulttls"
           }
+        - name: log-storage
+          emptyDir: {}
 
 ---
