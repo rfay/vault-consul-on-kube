@@ -54,7 +54,8 @@ spec:
             value: http://localhost:9000
           readinessProbe:
             httpGet:
-              path: /v1/sys/health
+              # "leader" returns a 503 for a sealed vault, which is basically what we want
+              path: /v1/sys/leader
               port: 9000
             initialDelaySeconds: 30
             timeoutSeconds: 1

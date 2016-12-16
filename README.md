@@ -247,4 +247,6 @@ value           	1
 * Restart/kill <vault-2*> or kill the process
 * <vault-1*> will become active
 
-Please note that when you do a `kubectl get po -l app=vault` you will only see one of the instances "ready". This is because only one can be leader, and that's the one that the load balancer wants to talk to by default. The readinessProbe on each determines whether it is the leader.
+Note that if a vault is sealed, its "READY" in `kubectl get po` will be 1/2, meaning
+that although the logger container is ready, the vault container is not - it's not
+considered ready until unsealed.
