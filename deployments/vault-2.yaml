@@ -64,8 +64,8 @@ spec:
                 mountPath: /etc/tls
               - name: log-storage
                 mountPath: /vault/logs
-        - name: sidecar-auditlog-collector
-          image: randyfay/sidecar_json_logging:0.0.1
+        - name: logging-sidecar
+          image: drud/fluentd_logging_sidecar:1.4
           resources:
             limits:
               cpu: 100m
