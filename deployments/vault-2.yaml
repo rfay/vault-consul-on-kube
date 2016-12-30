@@ -36,8 +36,8 @@ spec:
                 backend "consul" {
                   address = "$(CONSUL_HTTP_SERVICE_HOST):$(CONSUL_HTTP_SERVICE_PORT)"
                   cluster_addr = "https://$(VAULT_2_SERVICE_HOST):$(VAULT_2_SERVICE_PORT_BACKENDPORT)"
-                  disable_registration = "true"
                   token = "$VAULT_CONSUL_KEY"
+                  check_timeout = "3s"
                 }
                 listener "tcp" {
                   address = "0.0.0.0:8200"

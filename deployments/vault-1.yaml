@@ -37,7 +37,7 @@ spec:
                   address = "$(CONSUL_HTTP_SERVICE_HOST):$(CONSUL_HTTP_SERVICE_PORT)"
                   cluster_addr = "https://$(VAULT_1_SERVICE_HOST):$(VAULT_1_SERVICE_PORT_BACKENDPORT)"
                   token = "$VAULT_CONSUL_KEY"
-                  disable_registration = "true"
+                  check_timeout = "3s"
                 }
                 listener "tcp" {
                   address = "0.0.0.0:8200"
