@@ -37,10 +37,10 @@ spec:
             # See https://github.com/hashicorp/vault/issues/1559 for why true is quoted in disable_registration
             value:
                 backend "consul" {
-                  address = "$(CONSUL_HTTP_SERVICE_HOST):$(CONSUL_HTTP_SERVICE_PORT)"
+                  address = "localhost:8500"
                   cluster_addr = "https://$(VAULT_2_SERVICE_HOST):$(VAULT_2_SERVICE_PORT_BACKENDPORT)"
+                  disable_registration = "true"
                   token = "$VAULT_CONSUL_KEY"
-                  check_timeout = "3s"
                 }
                 listener "tcp" {
                   address = "0.0.0.0:8200"
@@ -48,7 +48,7 @@ spec:
                   tls_key_file = "/etc/tls/tls.key"
                 }
                 listener "tcp" {
-                  address = "0.0.0.0:9000"
+                  address = "127.0.0.1:9000"
                   tls_disable = 1
                 }
                 disable_mlock = true
@@ -68,6 +68,23 @@ spec:
                 mountPath: /etc/tls
               - name: log-storage
                 mountPath: /vault/logs
+              - name: "consulconfig"
+                mountPath: /etc/consul
+        - name: consul-agent-client
+          image: "consul:0.7.2"
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          args:
+            - "agent"
+            - "-data-dir=/tmp/consul"
+            - "-retry-join=$(CONSUL_1_SERVICE_HOST)"
+            - "-config-dir=/etc/consul"
+            - "-node=vault-2"
+          volumeMounts:
+            - name: "consulconfig"
+              mountPath: /etc/consul
         - name: logging-sidecar
           image: drud/fluentd_logging_sidecar:1.4
           resources:
@@ -90,4 +107,7 @@ spec:
           }
         - name: log-storage
           emptyDir: {}
-
+        - name: "consulconfig"
+          "secret": {
+            "secretName": "consul-config"
+          }
