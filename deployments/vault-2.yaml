@@ -15,8 +15,11 @@ spec:
         fsGroup: 1000
       containers:
         - name: vault
-          image: "drud/vault:0.6.2"
-          imagePullPolicy: Always
+          image: "drud/vault:0.6.3"
+          resources:
+            limits:
+              cpu: 300m
+              memory: 200Mi
           ports:
           - containerPort: 8200
             name: main-port
