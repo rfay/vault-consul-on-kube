@@ -1,4 +1,4 @@
-FROM vault:0.6.2
+FROM vault:0.6.3
 MAINTAINER Randy Fay <rfay@newmediadenver.com>
 
 # Provide for envsubst from gettext
