@@ -19,7 +19,8 @@ spec:
           resources:
             limits:
               cpu: 300m
-              memory: 200Mi
+              # Active vault leader has been seen with ~300MB
+              memory: 500Mi
           ports:
           - containerPort: 8200
             name: main-port
