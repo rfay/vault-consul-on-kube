@@ -25,6 +25,8 @@ spec:
             name: main-port
           - containerPort: 8201
             name: local-talk-port
+          - containerPort: 9000
+            name: monitor-port
           env:
           - name: VAULT_CONSUL_KEY
             valueFrom:
@@ -48,7 +50,7 @@ spec:
                   tls_key_file = "/etc/tls/tls.key"
                 }
                 listener "tcp" {
-                  address = "127.0.0.1:9000"
+                  address = "0.0.0.0:9000"
                   tls_disable = 1
                 }
                 disable_mlock = true
