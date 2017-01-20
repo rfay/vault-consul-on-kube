@@ -17,10 +17,14 @@ spec:
         - name: vault
           image: "drud/vault:0.6.3-2"
           resources:
+          resources:
+            requests:
+              cpu: 300m
+              memory: 700Mi
             limits:
               cpu: 300m
-              # Active vault leader has been seen with ~300MB
-              memory: 500Mi
+              # Active vault has been seen with 700Mi
+              memory: 1000Mi
           ports:
           - containerPort: 8200
             name: main-port

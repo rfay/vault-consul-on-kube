@@ -16,6 +16,9 @@ spec:
         - name: consul
           image: "consul:0.7.2"
           resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
             limits:
               cpu: 200m
               memory: 200Mi
